@@ -13,25 +13,34 @@
     <ImageView
         android:id="@+id/qrImageView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="400dp" />
 
-    <Button
-        android:onClick="takePictureClick"
-        android:text="Take Picture"
+    <TextView
+        android:textSize="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="82dp"
-        android:id="@+id/button" />
+        android:id="@+id/qrTextView"
+        android:text="Data : " />
 
     <Button
         android:onClick="deleteImageClick"
         android:text="Delete Image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:id="@+id/deleteBtn"
+        android:layout_above="@+id/qrTextView"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="29dp"
-        android:id="@+id/deleteBtn" />
+        android:layout_marginBottom="11dp" />
+
+    <Button
+        android:onClick="takePictureClick"
+        android:text="Take Picture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button"
+        android:layout_above="@+id/deleteBtn"
+        android:layout_alignStart="@+id/deleteBtn" />
+
 </RelativeLayout>

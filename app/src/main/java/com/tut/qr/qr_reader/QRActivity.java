@@ -11,8 +11,15 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.barcode.Barcode;
+import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,13 +31,16 @@ public class QRActivity extends AppCompatActivity {
 
     String mCurrentPhotoPath;
     static final int REQUEST_TAKE_PHOTO = 1;
-    ImageView iv;
+    private File mTempCameraPhotoFile;
+    private ImageView iv;
+    private TextView tv;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
 
         iv = (ImageView) findViewById(R.id.qrImageView);
+        tv = (TextView)findViewById(R.id.qrTextView);
     }
 
 
@@ -65,9 +75,8 @@ public class QRActivity extends AppCompatActivity {
                     }
                 }
         }
+        tv.setText("Data : ");
     }
-
-    private File mTempCameraPhotoFile;
 
     private void takeFromCamera() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -92,19 +101,15 @@ public class QRActivity extends AppCompatActivity {
             if (requestCode == REQUEST_TAKE_PHOTO) {
                 String filePath = mTempCameraPhotoFile.getPath();
                 Log.d("onActivityResult", filePath);
+                //create bitmap
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inPreferredConfig = Bitmap.Config.ARGB_8888;
                 Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
                 bitmap = rotateBitmap(bitmap, 90);
+                //display image
                 iv.setImageBitmap(bitmap);
-                /*
-                // extracted file path can be load into imageview for example with Picasso loader
-                Uri uri = Uri.fromFile(new File(mReportImageList.get(position).getUrl()));
-                Picasso.with(mContext)
-                        .load(uri)
-                        .fit()
-                        .centerCrop()
-                        .into(ivPhoto);*/
+                //decode barcode
+                decodeBarcode(bitmap);
             }
         }
     }
@@ -115,6 +120,29 @@ public class QRActivity extends AppCompatActivity {
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
+    private void decodeBarcode(Bitmap bitmap){
+        BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext())
+                //.setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE)
+                .build();
+        if(!detector.isOperational()){
+            Toast.makeText(getApplicationContext(), "Could not set up the detector!", Toast.LENGTH_SHORT).show();
+            //return;
+        }else{
+            Toast.makeText(getApplicationContext(), "Detector is operating", Toast.LENGTH_SHORT).show();
+        }
+        Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+        SparseArray<Barcode> barcodes = detector.detect(frame);
+        String data = "Data : ";
+        if(barcodes.size() > 0) {
+            Barcode thisCode = barcodes.valueAt(0);
+            data += thisCode.rawValue;
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(thisCode.rawValue)));
+        }else{
+            data+="Error";
+        }
+        tv.setText(data);
+
+    }
 
 }
 
