@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
@@ -110,6 +111,7 @@ public class QRActivity extends AppCompatActivity {
                 iv.setImageBitmap(bitmap);
                 //decode barcode
                 decodeBarcode(bitmap);
+                //new barcodeTask(bitmap).execute();
             }
         }
     }
@@ -142,6 +144,57 @@ public class QRActivity extends AppCompatActivity {
         }
         tv.setText(data);
 
+    }
+
+    private class barcodeTask extends AsyncTask<Void,Void,Void>{
+
+        Bitmap bitmap;
+        String uri = "";
+
+        public barcodeTask(Bitmap bitmap){
+            this.bitmap=bitmap;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext())
+                    //.setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE)
+                    .build();
+            if(!detector.isOperational()){
+                //Toast.makeText(getApplicationContext(), "Could not set up the detector!", Toast.LENGTH_SHORT).show();
+                //return;
+            }else{
+                //Toast.makeText(getApplicationContext(), "Detector is operating", Toast.LENGTH_SHORT).show();
+            }
+            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+            SparseArray<Barcode> barcodes = detector.detect(frame);
+            String data = "Data : ";
+            if(barcodes.size() > 0) {
+                Barcode thisCode = barcodes.valueAt(0);
+                data += thisCode.rawValue;
+                uri = thisCode.rawValue;
+
+            }else{
+                data+="Error";
+            }
+            //tv.setText(data);
+            final String finalData = data;
+            tv.post(new Runnable() {
+                @Override
+                public void run() {
+                    tv.setText(finalData);
+                }
+            });
+           return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(uri)));
+            }catch (Exception e){}
+            super.onPostExecute(aVoid);
+        }
     }
 
 }
