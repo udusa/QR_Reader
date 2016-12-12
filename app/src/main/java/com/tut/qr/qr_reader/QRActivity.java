@@ -8,16 +8,19 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.vision.CameraSource;
+import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -35,13 +38,21 @@ public class QRActivity extends AppCompatActivity {
     private File mTempCameraPhotoFile;
     private ImageView iv;
     private TextView tv;
+
+    //QR Live
+    SurfaceView cameraSurfaceView;
+    BarcodeDetector mDetector;
+    CameraSource mCameraSource;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
 
         iv = (ImageView) findViewById(R.id.qrImageView);
-        tv = (TextView)findViewById(R.id.qrTextView);
+        tv = (TextView) findViewById(R.id.qrTextView);
+
+        initAllComponents();
     }
 
 
@@ -60,15 +71,14 @@ public class QRActivity extends AppCompatActivity {
         return image;
     }
 
-
     public void takePictureClick(View v) {
         takeFromCamera();
     }
 
-    public void deleteImageClick(View v){
-        if(mTempCameraPhotoFile != null){
-            if(mTempCameraPhotoFile.exists())
-                if(mTempCameraPhotoFile.delete()){
+    public void deleteImageClick(View v) {
+        if (mTempCameraPhotoFile != null) {
+            if (mTempCameraPhotoFile.exists())
+                if (mTempCameraPhotoFile.delete()) {
                     iv.setImageBitmap(null);
                     File exportDir = new File(Environment.getExternalStorageDirectory(), "tmp");
                     if (exportDir.exists()) {
@@ -122,37 +132,36 @@ public class QRActivity extends AppCompatActivity {
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
-    private void decodeBarcode(Bitmap bitmap){
+    private void decodeBarcode(Bitmap bitmap) {
         BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext())
                 //.setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE)
                 .build();
-        if(!detector.isOperational()){
+        if (!detector.isOperational()) {
             Toast.makeText(getApplicationContext(), "Could not set up the detector!", Toast.LENGTH_SHORT).show();
             //return;
-        }else{
+        } else {
             Toast.makeText(getApplicationContext(), "Detector is operating", Toast.LENGTH_SHORT).show();
         }
         Frame frame = new Frame.Builder().setBitmap(bitmap).build();
         SparseArray<Barcode> barcodes = detector.detect(frame);
         String data = "Data : ";
-        if(barcodes.size() > 0) {
+        if (barcodes.size() > 0) {
             Barcode thisCode = barcodes.valueAt(0);
             data += thisCode.rawValue;
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(thisCode.rawValue)));
-        }else{
-            data+="Error";
+        } else {
+            data += "Error";
         }
         tv.setText(data);
 
     }
 
-    private class barcodeTask extends AsyncTask<Void,Void,Void>{
-
+    private class barcodeTask extends AsyncTask<Void, Void, Void> {
         Bitmap bitmap;
         String uri = "";
 
-        public barcodeTask(Bitmap bitmap){
-            this.bitmap=bitmap;
+        public barcodeTask(Bitmap bitmap) {
+            this.bitmap = bitmap;
         }
 
         @Override
@@ -160,22 +169,22 @@ public class QRActivity extends AppCompatActivity {
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext())
                     //.setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE)
                     .build();
-            if(!detector.isOperational()){
+            if (!detector.isOperational()) {
                 //Toast.makeText(getApplicationContext(), "Could not set up the detector!", Toast.LENGTH_SHORT).show();
                 //return;
-            }else{
+            } else {
                 //Toast.makeText(getApplicationContext(), "Detector is operating", Toast.LENGTH_SHORT).show();
             }
             Frame frame = new Frame.Builder().setBitmap(bitmap).build();
             SparseArray<Barcode> barcodes = detector.detect(frame);
             String data = "Data : ";
-            if(barcodes.size() > 0) {
+            if (barcodes.size() > 0) {
                 Barcode thisCode = barcodes.valueAt(0);
                 data += thisCode.rawValue;
                 uri = thisCode.rawValue;
 
-            }else{
-                data+="Error";
+            } else {
+                data += "Error";
             }
             //tv.setText(data);
             final String finalData = data;
@@ -185,16 +194,68 @@ public class QRActivity extends AppCompatActivity {
                     tv.setText(finalData);
                 }
             });
-           return null;
+            return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             try {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(uri)));
-            }catch (Exception e){}
+            } catch (Exception e) {
+            }
             super.onPostExecute(aVoid);
         }
+    }
+
+
+    ///Live QR
+    private void initAllComponents() {
+        cameraSurfaceView = (SurfaceView) findViewById(R.id.cameraSurfaceView);
+        mDetector = new BarcodeDetector.Builder(getApplicationContext()).build();
+        mCameraSource = new CameraSource.Builder(this,mDetector)
+                .setRequestedPreviewSize(640,480)
+                .build();
+
+        cameraSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                try {
+                    mCameraSource.start(cameraSurfaceView.getHolder());
+                } catch (IOException ie) {
+                    Log.e("CAMERA SOURCE", ie.getMessage());
+                }
+            }
+            @Override
+            public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+            }
+            @Override
+            public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                mCameraSource.stop();
+            }
+        });
+
+        mDetector.setProcessor(new Detector.Processor<Barcode>() {
+            @Override
+            public void release() {
+
+            }
+            @Override
+            public void receiveDetections(Detector.Detections<Barcode> detections) {
+                final SparseArray<Barcode> barcodes = detections.getDetectedItems();
+                if (barcodes.size() != 0) {
+                    tv.post(new Runnable() {    // Use the post method of the TextView
+                        public void run() {
+                            String data = barcodes.valueAt(0).displayValue;
+                            tv.setText(    // Update the TextView
+                                    "Data : "+data
+                            );
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(data)));
+                        }
+                    });
+                }
+            }
+        });
     }
 
 }

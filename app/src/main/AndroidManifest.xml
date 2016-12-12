@@ -5,6 +5,7 @@
     <meta-data android:name="com.google.android.gms.vision.DEPENDENCIES" android:value="barcode"/>
     <uses-feature android:name="android.hardware.camera" android:required="true" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"

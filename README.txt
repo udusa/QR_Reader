@@ -6,3 +6,4 @@ Goole API : https://developers.google.com/android/reference/com/google/android/g
 
 
 To extend the app for live scanning : http://stackoverflow.com/questions/38354110/how-to-make-a-bitmap-of-a-live-camera-feed
+Live SCANNING TUTORIALS : https://code.tutsplus.com/tutorials/reading-qr-codes-using-the-mobile-vision-api--cms-24680

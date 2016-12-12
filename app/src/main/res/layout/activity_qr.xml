@@ -10,11 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.tut.qr.qr_reader.QRActivity">
 
-    <ImageView
-        android:id="@+id/qrImageView"
-        android:layout_width="match_parent"
-        android:layout_height="400dp" />
-
     <TextView
         android:textSize="20dp"
         android:layout_width="wrap_content"
@@ -31,8 +26,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/deleteBtn"
         android:layout_above="@+id/qrTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="11dp" />
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:onClick="takePictureClick"
@@ -42,5 +36,19 @@
         android:id="@+id/button"
         android:layout_above="@+id/deleteBtn"
         android:layout_alignStart="@+id/deleteBtn" />
+
+    <SurfaceView
+        android:layout_width="480px"
+        android:layout_height="640px"
+        android:id="@+id/cameraSurfaceView"
+        android:layout_above="@+id/button"
+        android:layout_centerHorizontal="true" />
+
+    <ImageView
+        android:id="@+id/qrImageView"
+        android:layout_width="640px"
+        android:layout_height="480px"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
